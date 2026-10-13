@@ -7,23 +7,24 @@ on:
 
 jobs:
   build:
-    name: Build on Microsoft Cloud (VS 2022)
+    name: Build on Microsoft Cloud
     runs-on: windows-latest
 
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v4
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
 
-    - name: Restore and Build VSTO Add-in
-      run: |
-        msbuild ToolVaBiPPT.csproj /t:Restore,Build /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath=bin\Release\ /p:AssemblySearchPaths="C:\Program Files\Common Files\microsoft shared\VSTO\10.0\;C:\Program Files (x86)\Common Files\microsoft shared\VSTO\10.0\;{CandidateAssemblyFiles};{HintPathFromItem};{TargetFrameworkDirectory}"
+    - name: Compile ToolVaBiPPT.dll
+      run: dotnet build ToolVaBiPPT.csproj -c Release -o bin/Release
 
-    - name: Package Compiled Files
+    - name: Package Release Artifact
       run: |
-        powershell Compress-Archive -Path bin\Release\* -DestinationPath ToolVaBi_PowerPoint_Compiled.zip -Force
+        powershell Compress-Archive -Path bin/Release/* -DestinationPath ToolVaBi_PowerPoint_Compiled.zip -Force
 
     - name: Upload Downloadable Artifact
       uses: actions/upload-artifact@v4
