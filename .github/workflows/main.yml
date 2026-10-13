@@ -1,0 +1,38 @@
+name: Build ToolVaBi PowerPoint VSTO Add-in
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on Microsoft Cloud (Windows + VS 2022)
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild (Visual Studio 2022)
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Setup NuGet
+      uses: nuget/setup-nuget@v2
+
+    - name: Restore NuGet Packages
+      run: nuget restore ToolVaBiPPT.csproj
+
+    - name: Compile ToolVaBiPPT.dll
+      run: msbuild ToolVaBiPPT.csproj /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath=bin\Release\
+
+    - name: Package Release Artifact
+      run: |
+        powershell Compress-Archive -Path bin\Release\*, assets -DestinationPath ToolVaBi_PowerPoint_Compiled.zip -Force
+
+    - name: Upload Downloadable Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ToolVaBi_PowerPoint_Compiled_Binary
+        path: ToolVaBi_PowerPoint_Compiled.zip
+        retention-days: 30
